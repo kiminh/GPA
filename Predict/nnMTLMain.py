@@ -4,10 +4,12 @@
 # @FileName: nnMTLMain.py
 
 
+import matplotlib as mpl
+mpl.rcParams['font.sans-serif'] = ['FangSong']
+import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
 
 from Predict.DataHandler import *
-from MTL.NN import nnMTL
 from MTL.batchNN import nnMTL2
 
 (train_X,train_y,test_X,test_y)=LoadData2()
@@ -65,15 +67,14 @@ print(test_gpa_y.shape)
 print("----gpa回归预测-------")
 m=mean_squared_error(predict_gpa_y,test_gpa_y)
 print("mse:%f"%m)
-
+plt.scatter(test_gpa_y,predict_gpa_y)
+plt.show()
 print("-------failed分类预测-------")
-print(set(predict_failed_y))
-print(set(test_failed_y))
-print(predict_failed_y.shape)
-print(test_failed_y.shape)
+
 f1=f1_score(test_failed_y,predict_failed_y)
 print("f1:%f"%f1)
 macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
 print("macro auc:%f"%macro_auc)
 micro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="micro")
 print("micro auc:%f"%micro_auc)
+

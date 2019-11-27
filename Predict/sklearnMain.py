@@ -10,6 +10,10 @@ from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
 from sklearn.neural_network import MLPRegressor,MLPClassifier
 
 from Predict.DataHandler import *
+import matplotlib as mpl
+mpl.rcParams['font.sans-serif'] = ['FangSong']
+import matplotlib.pyplot as plt
+
 
 random_state=5
 
@@ -35,11 +39,11 @@ train_X=train_X.astype(np.float32)
 train_failed_y=train_failed_y.astype(np.float32)
 train_gpa_y=train_gpa_y.astype(np.float32)
 #对train中failed的样本进行重复采样
-# failed_idx=np.argwhere(train_failed_y==0).flatten()
-# dup_idx=np.random.choice(failed_idx,len(failed_idx)*3,replace=True)#有放回抽取
-# train_X=np.concatenate((train_X,train_X[dup_idx]),axis=0)
-# train_failed_y=np.append(train_failed_y,train_failed_y[dup_idx])
-# train_gpa_y=np.append(train_gpa_y,train_gpa_y[dup_idx])
+failed_idx=np.argwhere(train_failed_y==0).flatten()
+dup_idx=np.random.choice(failed_idx,len(failed_idx)*3,replace=True)#有放回抽取
+train_X=np.concatenate((train_X,train_X[dup_idx]),axis=0)
+train_failed_y=np.append(train_failed_y,train_failed_y[dup_idx])
+train_gpa_y=np.append(train_gpa_y,train_gpa_y[dup_idx])
 
 test_X=test_X.astype(np.float32)
 test_failed_y=test_failed_y.astype(np.float32)
@@ -70,6 +74,7 @@ f1=f1_score(test_failed_y,predict_y)
 macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
 micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
 print("MLP-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+
 
 
 model=DecisionTreeClassifier()
@@ -114,29 +119,40 @@ macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
 micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
 print("ExtraTree-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
 
-# model=ensemble.AdaBoostClassifier(n_estimators=20,random_state=random_state)
-# predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-# f1=f1_score(test_failed_y,predict_y)
-# print("Adaboost：%f"%f1)
+model=ensemble.AdaBoostClassifier(n_estimators=20,random_state=random_state)
+predict_y=model.fit(train_X,train_failed_y).predict(test_X)
+f1=f1_score(test_failed_y,predict_y)
+macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
+micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
+print("Adaboost-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
 
-# model=svm.SVC()
-# predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-# f1=f1_score(test_failed_y,predict_y)
-# print("SVM：%f"%f1)
+model=svm.SVC()
+predict_y=model.fit(train_X,train_failed_y).predict(test_X)
+f1=f1_score(test_failed_y,predict_y)
+macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
+micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
+print("SVM-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
 """
 gpa
 """
 print("---------gpa 回归任务-----------------")
+
+model=linear_model.LinearRegression()
+predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
+mse=mean_squared_error(test_gpa_y,predict_y)
+print("Linear：%f"%mse)
+plt.scatter(test_gpa_y,predict_y)
+plt.show()
 
 model=MLPRegressor()
 predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
 m=mean_squared_error(test_gpa_y,predict_y)
 print("MLP:%f"%m)
 
-model=linear_model.LinearRegression()
-predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
-mse=mean_squared_error(test_gpa_y,predict_y)
-print("Linear：%f"%mse)
+plt.scatter(test_gpa_y,predict_y)
+plt.show()
+
+
 
 model=tree.DecisionTreeRegressor()
 predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
@@ -168,12 +184,12 @@ predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
 mse=mean_squared_error(test_gpa_y,predict_y)
 print("ExtraTree：%f"%mse)
 
-# model=ensemble.AdaBoostRegressor(n_estimators=50,random_state=random_state)
-# predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
-# mse=mean_squared_error(test_gpa_y,predict_y)
-# print("Adaboost：%f"%mse)
+model=ensemble.AdaBoostRegressor(n_estimators=50,random_state=random_state)
+predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
+mse=mean_squared_error(test_gpa_y,predict_y)
+print("Adaboost：%f"%mse)
 
-# model=svm.SVR(C=10)
-# predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
-# mse=mean_squared_error(test_gpa_y,predict_y)
-# print("SVC：%f"%mse)
+model=svm.SVR(C=10)
+predict_y=model.fit(train_X,train_gpa_y).predict(test_X)
+mse=mean_squared_error(test_gpa_y,predict_y)
+print("SVC：%f"%mse)

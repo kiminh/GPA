@@ -15,13 +15,13 @@ class nnMTL2():
     神经网络多任务
     先共享隐层，再各自预测
     """
-    def __init__(self,h=100,epoch=5000):
+    def __init__(self,h=50,epoch=5000):
         self.h=h
         self.epoch=epoch
         self.learning_rate=0.001
         self.lamda=0.0001#正则项参数
         self.batch_size=200
-        self.alpha=0.8#gpa的权重
+        self.alpha=0.7#gpa的权重
 
     def fit(self,X,Y):
         """
@@ -91,14 +91,14 @@ class nnMTL2():
                 cur_loss=0.0
                 i=0
                 while i<record_num:
-                    cur_X=self.X[i:min(i+batch_size,record_num),:]
+                    cur_X=self.X[i:min(i+self.batch_size,record_num),:]
                     cur_gpa=self.y1[i:min(i+batch_size,record_num),:]
                     cur_failed=self.y2[i:min(i+batch_size,record_num),:]
 
                     sess.run(train,feed_dict={X:cur_X,y_gpa:cur_gpa,y_failed:cur_failed})
                     cur_loss+=sess.run(loss,feed_dict={X:cur_X,y_gpa:cur_gpa,y_failed:cur_failed})
 
-                    i=min(i+batch_size,record_num)
+                    i=min(i+self.batch_size,record_num)
                 print("epoch:%d, loss:%f"%(e,cur_loss))
 
 
@@ -109,7 +109,6 @@ class nnMTL2():
             self.W2 = sess.run(W2)
             self.b2 = sess.run(b2)
         print("hidden:%d,learning_rate:%f,lambda:%f, alpha:%f" % (self.h, self.learning_rate, self.lamda,self.alpha))
-        print("loss2: sigmoid+ MSE")
 
     def predict(self,X):
         """

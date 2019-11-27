@@ -13,24 +13,24 @@ train_gpa_y=train_y[:,0]
 train_failed_y=[]
 for item in train_y[:,1]:
     if item:
-        train_failed_y.append(1)
-    else:
         train_failed_y.append(0)
+    else:
+        train_failed_y.append(1)
 train_failed_y=np.array(train_failed_y)
 test_gpa_y=test_y[:,0]
 test_failed_y=[]
 for item in test_y[:,1]:
     if item:
-        test_failed_y.append(1)
-    else:
         test_failed_y.append(0)
+    else:
+        test_failed_y.append(1)
 test_failed_y=np.array(test_failed_y)
 
 train_X=train_X.astype(np.float32)
 train_failed_y=train_failed_y.astype(np.float32)
 train_gpa_y=train_gpa_y.astype(np.float32)
 #对train中failed的样本进行重复采样
-failed_idx=np.argwhere(train_failed_y==1).flatten()
+failed_idx=np.argwhere(train_failed_y==0).flatten()
 dup_idx=np.random.choice(failed_idx,len(failed_idx)*3,replace=True)#有放回抽取
 train_X=np.concatenate((train_X,train_X[dup_idx]),axis=0)
 train_failed_y=np.append(train_failed_y,train_failed_y[dup_idx])
