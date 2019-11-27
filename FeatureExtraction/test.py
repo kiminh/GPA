@@ -8,16 +8,14 @@ import numpy as np
 import pandas as pd
 import random
 random.seed(10)
-#
-# df=pd.DataFrame({'a':[1,2,3,4],'b':[1,2,3,4],'c':[1,2,3,4]})
-#
-# df2=df.ix[:,:-2]
-# df3=df.ix[:,-2:]
-# print(df)
-# print(df2)
-# print(df3)
+np.random.seed(10)
+from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
 
-a=np.full(shape=(3,5),fill_value=3)
+a=np.array([[1,2,3],[1,2,3]])
+
+b=a[:,1]
+b=np.reshape(b,newshape=(len(b),1))
+c=a[:,0]
 print(a)
-print(a[:,1])
-
+print(b)
+print(c)

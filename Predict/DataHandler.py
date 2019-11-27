@@ -26,13 +26,40 @@ def LoadData():
     test_stu_df=pd.read_csv(test_stu_path)
     test_gpa_df=pd.read_csv(test_gpa_path)
 
-    (train_X,train_y)=ConstructData(train_stu_df,train_gpa_df)
-    (test_X,test_y)=ConstructData(test_stu_df,test_gpa_df)
+    (train_X,train_y)=ConstructData2(train_stu_df,train_gpa_df)
+    (test_X,test_y)=ConstructData2(test_stu_df,test_gpa_df)
 
     return (train_X,train_y,test_X,test_y)
 
+def ConstructData2(stu_df,gpa_df):
+    """
+    每个人只有一条记录待预测
+    :param stu_df:
+    :param gpa_df:
+    :return:
+    """
 
+    stu_df = LoadStu(stu_df)  # one-hot表示
 
+    gpa_df = LoadCourse(gpa_df)  # one-hot表示
+    
+
+    target_df = gpa_df[gpa_df['semester'] == 5]  # 最后一学期为待遇测内容
+    history_df = gpa_df[gpa_df['semester'] != 5]  # 前几学期为历史
+
+    history_info_df = LoadHistory(history_df)  # 前几学期的平均绩点
+
+    target_df=LoadTarget(target_df)
+    target_info_df = target_df[['stu_id','total_credit']]
+    target_gpa_df = target_df[['stu_id', 'gpa', 'failed']]
+
+    df = pd.merge(stu_df, history_info_df, on='stu_id')
+    df = pd.merge(df, target_info_df, on='stu_id')
+    df = pd.merge(df, target_gpa_df, on='stu_id')
+
+    X = np.array(df.ix[:, 1:-2])
+    y = np.array(df.ix[:, -2:])
+    return X, y
 
 def ConstructData(stu_df,gpa_df):
     stu_df = LoadStu(stu_df)  # one-hot表示
@@ -45,6 +72,9 @@ def ConstructData(stu_df,gpa_df):
             info_name_lst.append(name)
 
     target_df = gpa_df[gpa_df['semester'] == 5]  # 最后一学期为待遇测内容
+    
+    
+    
     history_df = gpa_df[gpa_df['semester'] != 5]  # 前几学期为历史
 
     history_info_df = LoadHistory(history_df)  # 前几学期的平均绩点
@@ -61,10 +91,37 @@ def ConstructData(stu_df,gpa_df):
     return X,y
 
 
+def LoadTarget(target_df):
+    """
+    算一下总学分，以及综合绩点和是否挂科
+    :param target_df:
+    :return:
+    """
 
-
-
-
+    stu_lst=[]
+    credit_lst=[]
+    gpa_lst=[]
+    failed_lst=[]
+    for stu_id, sub_group in target_df.groupby('stu_id'):
+        stu_lst.append(stu_id)
+        total_credit=0.0
+        total_gpa=0.0
+        failed=False
+        for credit,gpa,f in zip(sub_group.credit,sub_group.gpa,sub_group.failed):
+            if f:#挂科的课程不计入计算
+                failed=True
+                continue
+            total_credit+=credit
+            total_gpa+=gpa*credit
+        if total_credit==0:
+            avg_gpa=0
+        else:
+            avg_gpa=total_gpa/total_credit
+        credit_lst.append(total_credit)
+        gpa_lst.append(avg_gpa)
+        failed_lst.append(failed)
+    df=pd.DataFrame({'stu_id':stu_lst,'total_credit':credit_lst,'gpa':gpa_lst,'failed':failed_lst})
+    return df
 
 def LoadStu(stu_df):
     """
@@ -129,10 +186,34 @@ def LoadHistory(history_df):
                          'g3':gpa_m[2],'f3':failed_m[2],'g4':gpa_m[3],'f4':failed_m[3]})
     return res_df
 
+def LoadData2():
+    root = "C:\\zxl\Data\GPA\\"
+    train_root = root + "train\\"
+    test_root = root + "test\\"
+
+    trainX_save_path = train_root + "trainX2.npy"
+    trainy_save_path = train_root + "trainy2.npy"
+    testX_save_path = test_root + "testX2.npy"
+    testy_save_path = test_root + "testy2.npy"
+
+    train_X=np.load(trainX_save_path)
+    train_y=np.load(trainy_save_path)
+    test_X=np.load(testX_save_path)
+    test_y=np.load(testy_save_path)
+    return (train_X,train_y,test_X,test_y)
 
 if __name__=="__main__":
     (train_X, train_y, test_X, test_y)=LoadData()
-    print(train_X.shape)
-    print(train_y.shape)
-    print(test_X.shape)
-    print(test_y.shape)
+    root = "C:\\zxl\Data\GPA\\"
+    train_root = root + "train\\"
+    test_root = root + "test\\"
+
+    trainX_save_path=train_root+"trainX2.npy"
+    trainy_save_path=train_root+"trainy2.npy"
+    testX_save_path=test_root+"testX2.npy"
+    testy_save_path=test_root+"testy2.npy"
+
+    np.save(trainX_save_path,train_X)
+    np.save(trainy_save_path,train_y)
+    np.save(testX_save_path,test_X)
+    np.save(testy_save_path,test_y)
