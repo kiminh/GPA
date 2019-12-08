@@ -3,19 +3,14 @@
 # @Author  : zxl
 # @FileName: test.py
 
-import json
+import math
 import numpy as np
 import pandas as pd
-import random
-random.seed(10)
-np.random.seed(10)
-from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
 
-a=np.array([[1,2,3],[1,2,3]])
+a=pd.DataFrame({'a':[1,2,3],'b':[5,6,7]})
+b=pd.DataFrame({'a':[1,2,3],'c':[7,8,9]})
 
-b=a[:,1]
-b=np.reshape(b,newshape=(len(b),1))
-c=a[:,0]
+c=pd.merge(a,b,on='a')
 print(a)
 print(b)
 print(c)

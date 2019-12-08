@@ -69,7 +69,8 @@ class DB():
         return res
     def getConsumeRec(self,stu_id,start_time,end_time):
         sql = "SELECT 时间,地点,消费金额,余额  FROM V_REC_CUST_ACC " \
-              "WHERE 学工号=\'"+stu_id+"\' AND 时间>\'"+start_time+"\'  AND 时间<\'"+end_time+"\'"
+              "WHERE 学工号=\'"+stu_id+"\' AND 时间>\'"+start_time+"\'  AND 时间<\'"+end_time+"\'" \
+              "ORDER BY 时间"
         res = []
         #print(sql)
         records = self.ExecQuery(sql)
@@ -80,6 +81,10 @@ class DB():
             balence=r[3]
             res.append([place,time,amount,balence])
         return res
+
+
+
+
 
     "Grade这张表"
     def InsertIntoGrade(self,institute,department,enroll_time,code1,stu_id,name,
@@ -123,7 +128,8 @@ class DB():
         self.ExecNonQuery(sql)
 
     def getLibInfo(self,stu_id,start_time,end_time):
-        sql="SELECT time FROM Library WHERE stu_id =\'"+stu_id+"\' AND time >=\'"+start_time+"\' AND time<=\'"+end_time+"\'"
+        sql="SELECT time FROM Library WHERE stu_id =\'"+stu_id+"\' AND time >=\'"+start_time+"\' AND time<=\'"+end_time+"\'" \
+             "ORDER BY time"
         records=self.ExecQuery(sql)
         res=[]
         for rec in records:

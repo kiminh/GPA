@@ -11,6 +11,7 @@ from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
 
 from Predict.DataHandler import *
 from MTL.batchNN import nnMTL2
+# from MTL.batchNN2 import nnMTL3
 
 (train_X,train_y,test_X,test_y)=LoadData2()
 train_gpa_y=train_y[:,0]
@@ -68,9 +69,11 @@ print("----gpa回归预测-------")
 m=mean_squared_error(predict_gpa_y,test_gpa_y)
 print("mse:%f"%m)
 plt.scatter(test_gpa_y,predict_gpa_y)
+plt.plot(test_gpa_y,test_gpa_y,color="red")
 plt.show()
 print("-------failed分类预测-------")
-
+print(set(test_failed_y))
+print(set(predict_failed_y))
 f1=f1_score(test_failed_y,predict_failed_y)
 print("f1:%f"%f1)
 macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")

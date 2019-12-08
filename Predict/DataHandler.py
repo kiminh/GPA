@@ -20,18 +20,22 @@ def LoadData():
     train_gpa_path=train_root+"gpa.csv"
     test_stu_path=test_root+"test_stu.csv"
     test_gpa_path=test_root+"gpa.csv"
+    train_entropy_path=train_root+"entropy.csv"
+    test_entropy_path=test_root+"entropy.csv"
 
     train_stu_df=pd.read_csv(train_stu_path)
     train_gpa_df=pd.read_csv(train_gpa_path)
     test_stu_df=pd.read_csv(test_stu_path)
     test_gpa_df=pd.read_csv(test_gpa_path)
+    train_entropy_df=pd.read_csv(train_entropy_path)
+    test_entropy_df=pd.read_csv(test_entropy_path)
 
-    (train_X,train_y)=ConstructData2(train_stu_df,train_gpa_df)
-    (test_X,test_y)=ConstructData2(test_stu_df,test_gpa_df)
+    (train_X,train_y)=ConstructData2(train_stu_df,train_gpa_df,train_entropy_df)
+    (test_X,test_y)=ConstructData2(test_stu_df,test_gpa_df,test_entropy_df)
 
     return (train_X,train_y,test_X,test_y)
 
-def ConstructData2(stu_df,gpa_df):
+def ConstructData2(stu_df,gpa_df,entropy_df):
     """
     每个人只有一条记录待预测
     :param stu_df:
@@ -42,6 +46,8 @@ def ConstructData2(stu_df,gpa_df):
     stu_df = LoadStu(stu_df)  # one-hot表示
 
     gpa_df = LoadCourse(gpa_df)  # one-hot表示
+
+
     
 
     target_df = gpa_df[gpa_df['semester'] == 5]  # 最后一学期为待遇测内容
@@ -55,7 +61,11 @@ def ConstructData2(stu_df,gpa_df):
 
     df = pd.merge(stu_df, history_info_df, on='stu_id')
     df = pd.merge(df, target_info_df, on='stu_id')
+    df = pd.merge(df, entropy_df, on="stu_id")
     df = pd.merge(df, target_gpa_df, on='stu_id')
+
+
+
 
     X = np.array(df.ix[:, 1:-2])
     y = np.array(df.ix[:, -2:])
@@ -89,6 +99,7 @@ def ConstructData(stu_df,gpa_df):
     X=np.array(df.ix[:,1:-2])
     y=np.array(df.ix[:,-2:])
     return X,y
+
 
 
 def LoadTarget(target_df):

@@ -8,15 +8,18 @@ import tensorflow as tf
 
 """
 NN的batch实现版本
+基于batchNN，更改网络结构
 """
 
-class nnMTL2():
+class nnMTL3():
     """
     神经网络多任务
     先共享隐层，再各自预测
     """
-    def __init__(self,h=50,epoch=100):
+    def __init__(self,h=50,h_g1=50,h_f1=50,epoch=50000):
         self.h=h
+        self.h_g1=h_g1
+        self.h_f1=h_f1
         self.epoch=epoch
         self.learning_rate=0.001
         self.lamda=0.001#正则项参数
@@ -50,28 +53,40 @@ class nnMTL2():
         #TODO 隐藏层激活函数未写，不过隐层应该也不需要激活函数吧
         H=tf.nn.relu(H)
 
-        b1 = tf.Variable(tf.zeros([1]))
-        b2 = tf.Variable(tf.zeros([1]))
-        W1 = tf.Variable(tf.zeros([1, self.h]))
-        W2 = tf.Variable(tf.zeros([1, self.h]))
 
-        y1 = tf.matmul(H,tf.transpose(W1)) + b1
-        y2 = tf.matmul(H, tf.transpose(W2)) + b2
-        #TODO 输出层激活函数未写
-        # y1=tf.nn.dropout(y1,keep_prob=1)
-        # y2=tf.nn.sigmoid(y2)
+        W_g1=tf.Variable(tf.ones([self.h,self.h_g1]))
+        W_g2=tf.Variable(tf.ones([1,self.h_g1]))
+        b_g1=tf.Variable(tf.zeros([1]))
+        b1=tf.Variable(tf.zeros([1]))
+        #TODO H_g1没有添加激活函数
+        H_g1=tf.matmul(H,W_g1)+b_g1
+        H_g1=tf.nn.relu(H_g1)
+
+        y1=tf.matmul(H_g1,tf.transpose(W_g2))+b1
+
+        W_f1=tf.Variable(tf.ones([self.h+self.h_g1,self.h_f1]))
+        W_f2=tf.Variable(tf.ones([1,self.h_f1]))
+        b_f1=tf.Variable(tf.zeros([1]))
+        b2=tf.Variable(tf.zeros([1]))
+        #TODO 隐层激活函数未写
+        H_f1=tf.matmul(tf.concat([H_g1,H],1),W_f1)+b_f1
+        H_f1=tf.nn.relu(H_f1)
+
+        y2=tf.matmul(H_f1,tf.transpose(W_f2))+b2
+
+
 
         # 方差
         # 正则项
-        reg_loss1=tf.reduce_mean((tf.nn.l2_loss(W)+tf.nn.l2_loss(W1)+tf.nn.l2_loss(W2)))
-        reg_loss2=tf.reduce_mean(tf.nn.l2_loss(b1)+tf.nn.l2_loss(b2))
+        reg_loss1=tf.reduce_mean((tf.nn.l2_loss(W)+tf.nn.l2_loss(W_g1)+tf.nn.l2_loss(W_g2)+tf.nn.l2_loss(W_f1)+tf.nn.l2_loss(W_f2)))
+        reg_loss2=tf.reduce_mean(tf.nn.l2_loss(b1)+tf.nn.l2_loss(b2)+tf.nn.l2_loss(b_g1)+tf.nn.l2_loss(b_f1))
 
-        loss1 = tf.reduce_mean(tf.square(y1 - y_gpa) )
+        loss1 = tf.reduce_mean(tf.square(y_gpa - y1) )
 
         #loss2试试sigmoid+mse
-        loss2=tf.reduce_mean(tf.square(tf.nn.sigmoid(y2)-y_failed))
-        # loss2 = tf.reduce_mean(
-        #     tf.nn.sigmoid_cross_entropy_        with_logits(labels=y_failed, logits=y2))
+        # loss2=tf.reduce_mean(tf.square(tf.nn.sigmoid(y2)-y_failed))
+        loss2 = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(labels=y_failed, logits=y2))
 
         loss = self.alpha*loss1 + (1.0-self.alpha)*loss2+ self.lamda*(reg_loss1+reg_loss2)
 
@@ -105,9 +120,13 @@ class nnMTL2():
             # self.save_path=saver.save(sess,'models/my_model',global_step=1000)
 
             self.W=sess.run(W)
-            self.W1 = sess.run(W1)
+            self.W_g1 = sess.run(W_g1)
+            self.W_g2 = sess.run(W_g2)
+            self.b_g1 = sess.run(b_g1)
             self.b1 = sess.run(b1)
-            self.W2 = sess.run(W2)
+            self.W_f1 = sess.run(W_f1)
+            self.W_f2 = sess.run(W_f2)
+            self.b_f1 = sess.run(b_g1)
             self.b2 = sess.run(b2)
         print("epoch:%d,batch_size:%d,hidden:%d,learning_rate:%f,lambda:%f, alpha:%f" % (self.epoch,self.batch_size,self.h, self.learning_rate, self.lamda,self.alpha))
         # print("无隐层")
@@ -117,34 +136,33 @@ class nnMTL2():
         :param X:特征
         :return: 多任务上的值
         """
-        H=np.dot(X,self.W)
+
         sess=tf.Session()
         with sess.as_default():
-            H=tf.nn.relu(H).eval()
+            H = np.dot(X, self.W)
+            H=tf.nn.relu(H)#TODO 激活函数怎么改
 
-        y1 = np.dot(self.W1, np.transpose(H)) + self.b1
-        y2 = np.dot(self.W2, np.transpose(H)) + self.b2
+            H_g1 = tf.matmul(H, self.W_g1) + self.b_g1
+            H_g1 = tf.nn.relu(H_g1)#TODO 激活函数怎么改
+            y1 = tf.matmul(H_g1, tf.transpose(self.W_g2)) + self.b1
+
+            H_f1 = tf.matmul(tf.concat([H_g1, H], 1), self.W_f1) + self.b_f1
+            H_f1 = tf.nn.relu(H_f1)#TODO 激活函数怎么改
+            y2 = tf.matmul(H_f1, tf.transpose(self.W_f2)) + self.b2
+
+            y1=y1.eval()
+            y2=y2.eval()
+
+
+
+
+
         y1 = y1.flatten()
         y2 = y2.flatten()
         thres = 0.5
         y2[y2 >= thres] = 1
         y2[y2 < thres] = 0
         res = np.array([y1, y2])
-        # sess=tf.Session()
-        # saver=tf.train.import_meta_graph("models/my_model-1000.meta")
-        # saver.restore(sess,tf.train.latest_checkpoint('models/'))
-        # fake_y1=np.full(shape=(len(X),1),fill_value=1)
-        # fake_y2=np.full(shape=(len(X),1),fill_value=1)
-        # graph=tf.get_default_graph()
-        # X_fea=graph.get_operation_by_name("X").outputs[0]
-        # gpa=graph.get_operation_by_name("y_gpa").outputs[0]
-        # failed=graph.get_operation_by_name("y_failed").outputs[0]
-        # res_gpa=sess.run(gpa,feed_dict={X_fea:X,gpa:fake_y1,failed:fake_y2})
-        # res_failed=sess.run(failed,feed_dict={X_fea:X,gpa:fake_y1,failed:fake_y2})
-        # res_failed[res_failed>=0.5]=1
-        # res_failed[res_failed<0.5]=1
-        # print(res_gpa.shape)
-        # print(res_failed.shape)
-        # res=[res_gpa,res_failed]
+
 
         return res
