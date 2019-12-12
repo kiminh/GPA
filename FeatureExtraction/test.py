@@ -6,11 +6,15 @@
 import math
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
-a=pd.DataFrame({'a':[1,2,3],'b':[5,6,7]})
-b=pd.DataFrame({'a':[1,2,3],'c':[7,8,9]})
+import matplotlib as mpl
+mpl.rcParams['font.sans-serif'] = ['FangSong']
+import matplotlib.pyplot as plt
 
-c=pd.merge(a,b,on='a')
-print(a)
+
+arr=np.full(shape=(3,5),fill_value=3)
+
+b=arr[:,0]+arr[:,1]+arr[:,2]
+print(arr)
 print(b)
-print(c)

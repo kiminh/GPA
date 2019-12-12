@@ -6,6 +6,7 @@
 import json
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 """
 将训练集合测试集数据处理成模型输入
@@ -62,6 +63,7 @@ def ConstructData2(stu_df,gpa_df,entropy_df):
     df = pd.merge(stu_df, history_info_df, on='stu_id')
     df = pd.merge(df, target_info_df, on='stu_id')
     df = pd.merge(df, entropy_df, on="stu_id")
+
     df = pd.merge(df, target_gpa_df, on='stu_id')
 
 
@@ -69,6 +71,10 @@ def ConstructData2(stu_df,gpa_df,entropy_df):
 
     X = np.array(df.ix[:, 1:-2])
     y = np.array(df.ix[:, -2:])
+
+    scaler=MinMaxScaler()
+    X=scaler.fit_transform(X)
+
     return X, y
 
 def ConstructData(stu_df,gpa_df):
@@ -202,10 +208,10 @@ def LoadData2():
     train_root = root + "train\\"
     test_root = root + "test\\"
 
-    trainX_save_path = train_root + "trainX2.npy"
-    trainy_save_path = train_root + "trainy2.npy"
-    testX_save_path = test_root + "testX2.npy"
-    testy_save_path = test_root + "testy2.npy"
+    trainX_save_path = train_root + "trainX3.npy"
+    trainy_save_path = train_root + "trainy3.npy"
+    testX_save_path = test_root + "testX3.npy"
+    testy_save_path = test_root + "testy3.npy"
 
     train_X=np.load(trainX_save_path)
     train_y=np.load(trainy_save_path)
@@ -219,10 +225,10 @@ if __name__=="__main__":
     train_root = root + "train\\"
     test_root = root + "test\\"
 
-    trainX_save_path=train_root+"trainX2.npy"
-    trainy_save_path=train_root+"trainy2.npy"
-    testX_save_path=test_root+"testX2.npy"
-    testy_save_path=test_root+"testy2.npy"
+    trainX_save_path=train_root+"trainX3.npy"
+    trainy_save_path=train_root+"trainy3.npy"
+    testX_save_path=test_root+"testX3.npy"
+    testy_save_path=test_root+"testy3.npy"
 
     np.save(trainX_save_path,train_X)
     np.save(trainy_save_path,train_y)

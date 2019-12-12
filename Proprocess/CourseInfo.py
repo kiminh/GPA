@@ -16,18 +16,24 @@ from DB.DBUtil import DB
 """
 # 年级 、课程名称、院系 三者找，找不到就用年级和课程找
 if __name__=="__main__":
-    root="C://zxl/Data/GPA/"
+    root="C://zxl/Data/GPA-large/"
     gpa_dir=root+"grade/records/"
     save_dir=root+"grade/records_completed/"
     profile_path=root+"stu/profile.csv"
 
     db=DB()
 
+    processed_dic={}
+    for file_name in os.listdir(save_dir):
+        processed_dic[file_name[:-4]]=True
+
     profile_df=pd.read_csv(profile_path)
     stu_enrolltime={x:y[:4] for x,y in zip(profile_df.stu_id,profile_df.enroll_time)}
     stu_dep={x:y[2:-8] for x,y in zip(profile_df.stu_id,profile_df.dep)}
     for file_name in os.listdir(gpa_dir):
         stu_id=file_name[:-4]
+        if stu_id in processed_dic.keys():
+            continue
         enroll_time=stu_enrolltime[stu_id]
         dep=stu_dep[stu_id]
         gpa_df=pd.read_csv(gpa_dir+file_name)

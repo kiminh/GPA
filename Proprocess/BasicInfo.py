@@ -33,12 +33,12 @@ def SaveProf(stu_list,prof_path):
 
 if __name__=="__main__":
     stu_list=[]
-    for enroll_time in [2014,2015,2016]:
+    for enroll_time in [2013,2014,2015,2016,2017]:
         cur_res=getUnderGraByEnrollTime(enroll_time)
         stu_list.extend(cur_res)
-    file_path="C://zxl/Data/GPA/stu/stu_list.csv"
-    dep_path="C://zxl/Data/GPA/stu/dep.csv"
-    profile_path = "C://zxl/Data/GPA/stu/profile.csv"
+    file_path="C://zxl/Data/GPA-large/stu/stu_list.csv"
+    #dep_path="C://zxl/Data/GPA-large/stu/dep.csv"
+    profile_path = "C://zxl/Data/GPA-large/stu/profile.csv"
     stu_df=pd.DataFrame({'stu_id':stu_list})
     stu_df.to_csv(file_path,index=False)
 

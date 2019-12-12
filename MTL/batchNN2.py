@@ -16,14 +16,14 @@ class nnMTL3():
     神经网络多任务
     先共享隐层，再各自预测
     """
-    def __init__(self,h=50,h_g1=50,h_f1=50,epoch=50000):
+    def __init__(self,h=50,h_g1=50,h_f1=50,epoch=5000):
         self.h=h
         self.h_g1=h_g1
         self.h_f1=h_f1
         self.epoch=epoch
         self.learning_rate=0.001
         self.lamda=0.001#正则项参数
-        self.batch_size=200
+        self.batch_size=500
         self.alpha=0.7#gpa的权重
 
     def fit(self,X,Y):
@@ -53,26 +53,30 @@ class nnMTL3():
         #TODO 隐藏层激活函数未写，不过隐层应该也不需要激活函数吧
         H=tf.nn.relu(H)
 
+        # W_f1=tf.Variable(tf.ones([self.h+self.h_g1,self.h_f1]))
+        W_f1 = tf.Variable(tf.ones([self.h_g1, self.h_f1]))
+
+        W_f2 = tf.Variable(tf.ones([1, self.h_f1]))
+        b_f1 = tf.Variable(tf.zeros([1]))
+        b2 = tf.Variable(tf.zeros([1]))
+        # TODO 隐层激活函数未写
+        # H_f1=tf.matmul(tf.concat([H_g1,H],1),W_f1)+b_f1
+        H_f1 = tf.matmul(H, W_f1) + b_f1
+        H_f1 = tf.nn.relu(H_f1)
+
+        y2 = tf.matmul(H_f1, tf.transpose(W_f2)) + b2
 
         W_g1=tf.Variable(tf.ones([self.h,self.h_g1]))
         W_g2=tf.Variable(tf.ones([1,self.h_g1]))
         b_g1=tf.Variable(tf.zeros([1]))
         b1=tf.Variable(tf.zeros([1]))
+
         #TODO H_g1没有添加激活函数
-        H_g1=tf.matmul(H,W_g1)+b_g1
+        H_g1=tf.matmul(H*H_f1,W_g1)+b_g1
         H_g1=tf.nn.relu(H_g1)
 
         y1=tf.matmul(H_g1,tf.transpose(W_g2))+b1
 
-        W_f1=tf.Variable(tf.ones([self.h+self.h_g1,self.h_f1]))
-        W_f2=tf.Variable(tf.ones([1,self.h_f1]))
-        b_f1=tf.Variable(tf.zeros([1]))
-        b2=tf.Variable(tf.zeros([1]))
-        #TODO 隐层激活函数未写
-        H_f1=tf.matmul(tf.concat([H_g1,H],1),W_f1)+b_f1
-        H_f1=tf.nn.relu(H_f1)
-
-        y2=tf.matmul(H_f1,tf.transpose(W_f2))+b2
 
 
 
@@ -128,7 +132,8 @@ class nnMTL3():
             self.W_f2 = sess.run(W_f2)
             self.b_f1 = sess.run(b_g1)
             self.b2 = sess.run(b2)
-        print("epoch:%d,batch_size:%d,hidden:%d,learning_rate:%f,lambda:%f, alpha:%f" % (self.epoch,self.batch_size,self.h, self.learning_rate, self.lamda,self.alpha))
+        print("第二种网络结构")
+        print("epoch:%d,batch_size:%d,hidden:%d,h_g1:%d, h_f1:%d,learning_rate:%f,lambda:%f, alpha:%f" % (self.epoch,self.batch_size,self.h,self.h_g1,self.h_f1,self.learning_rate, self.lamda,self.alpha))
         # print("无隐层")
 
     def predict(self,X):
@@ -142,12 +147,14 @@ class nnMTL3():
             H = np.dot(X, self.W)
             H=tf.nn.relu(H)#TODO 激活函数怎么改
 
-            H_g1 = tf.matmul(H, self.W_g1) + self.b_g1
+            # H_f1 = tf.matmul(tf.concat([H_g1, H], 1), self.W_f1) + self.b_f1
+            H_f1 = tf.matmul(tf.cast(H,tf.float32), self.W_f1) + self.b_f1
+            H_f1 = tf.nn.relu(H_f1)  # TODO 激活函数怎么改
+
+            H_g1 = tf.matmul(tf.cast(H,tf.float32)*H_f1, self.W_g1) + self.b_g1
             H_g1 = tf.nn.relu(H_g1)#TODO 激活函数怎么改
             y1 = tf.matmul(H_g1, tf.transpose(self.W_g2)) + self.b1
 
-            H_f1 = tf.matmul(tf.concat([H_g1, H], 1), self.W_f1) + self.b_f1
-            H_f1 = tf.nn.relu(H_f1)#TODO 激活函数怎么改
             y2 = tf.matmul(H_f1, tf.transpose(self.W_f2)) + self.b2
 
             y1=y1.eval()

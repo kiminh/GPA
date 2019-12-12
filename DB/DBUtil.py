@@ -128,7 +128,7 @@ class DB():
         self.ExecNonQuery(sql)
 
     def getLibInfo(self,stu_id,start_time,end_time):
-        sql="SELECT time FROM Library WHERE stu_id =\'"+stu_id+"\' AND time >=\'"+start_time+"\' AND time<=\'"+end_time+"\'" \
+        sql="SELECT DISTINCT time FROM Library WHERE stu_id =\'"+stu_id+"\' AND time >=\'"+start_time+"\' AND time<=\'"+end_time+"\'" \
              "ORDER BY time"
         records=self.ExecQuery(sql)
         res=[]

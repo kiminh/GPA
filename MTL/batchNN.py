@@ -15,12 +15,12 @@ class nnMTL2():
     神经网络多任务
     先共享隐层，再各自预测
     """
-    def __init__(self,h=50,epoch=100):
+    def __init__(self,h=50,epoch=5000):
         self.h=h
         self.epoch=epoch
         self.learning_rate=0.001
         self.lamda=0.001#正则项参数
-        self.batch_size=200
+        self.batch_size=1300
         self.alpha=0.7#gpa的权重
 
     def fit(self,X,Y):
@@ -31,9 +31,11 @@ class nnMTL2():
         :return:
         """
         self.X=X
+        #TODO 小样本代码
         self.Y=np.transpose(Y)#N*2
         self.y1=np.reshape(Y[0],newshape=(len(Y[0]),1))#gpa
-        self.y2=np.reshape(Y[1],newshape=(len(Y[1]),1))#failed
+        self.y2=np.reshape(Y[1],newshape=(len(Y[1]),1))#failed，挂科为0，通过为1
+        self.y3=[1-x for x in self.y2.flatten()]#pass，挂科为1，通过为0
         self.train()
 
 
@@ -52,11 +54,19 @@ class nnMTL2():
 
         b1 = tf.Variable(tf.zeros([1]))
         b2 = tf.Variable(tf.zeros([1]))
+        # W1 = tf.Variable(tf.zeros([1, self.h+1]))
         W1 = tf.Variable(tf.zeros([1, self.h]))
         W2 = tf.Variable(tf.zeros([1, self.h]))
 
-        y1 = tf.matmul(H,tf.transpose(W1)) + b1
         y2 = tf.matmul(H, tf.transpose(W2)) + b2
+        # y1 = tf.matmul(tf.concat([H,y2],axis=1),tf.transpose(W1)) + b1
+        y1 = tf.matmul(H,tf.transpose(W1)) + b1
+
+
+        #TODO 希望挂科的人gpa也不高
+        # y1=y1+(1*(1-y2)+2*y2)
+        # y1=y1*y2
+
         #TODO 输出层激活函数未写
         # y1=tf.nn.dropout(y1,keep_prob=1)
         # y2=tf.nn.sigmoid(y2)
@@ -71,9 +81,13 @@ class nnMTL2():
         #loss2试试sigmoid+mse
         loss2=tf.reduce_mean(tf.square(tf.nn.sigmoid(y2)-y_failed))
         # loss2 = tf.reduce_mean(
-        #     tf.nn.sigmoid_cross_entropy_        with_logits(labels=y_failed, logits=y2))
+        #     tf.nn.sigmoid_cross_entropy_with_logits(labels=y_failed, logits=y2))
 
-        loss = self.alpha*loss1 + (1.0-self.alpha)*loss2+ self.lamda*(reg_loss1+reg_loss2)
+        # #TODO约束的loss，更加关注未通过那部分
+        # aux_loss=tf.reduce_mean(tf.square(y1*y_failed-y_gpa*y_failed))
+        #
+        # loss1=2*loss1-aux_loss
+        loss = self.alpha*(loss1) + (1.0-self.alpha)*loss2+ self.lamda*(reg_loss1+reg_loss2)
 
         # 构建优化器
         optimizer=tf.train.AdamOptimizer(self.learning_rate)
@@ -100,9 +114,6 @@ class nnMTL2():
                     i=min(i+self.batch_size,record_num)
                 print("epoch:%d, loss:%f"%(e,cur_loss))
 
-            # #保存模型
-            # saver=tf.train.Saver()
-            # self.save_path=saver.save(sess,'models/my_model',global_step=1000)
 
             self.W=sess.run(W)
             self.W1 = sess.run(W1)
@@ -110,41 +121,40 @@ class nnMTL2():
             self.W2 = sess.run(W2)
             self.b2 = sess.run(b2)
         print("epoch:%d,batch_size:%d,hidden:%d,learning_rate:%f,lambda:%f, alpha:%f" % (self.epoch,self.batch_size,self.h, self.learning_rate, self.lamda,self.alpha))
-        # print("无隐层")
+        # print("交叉熵")
 
     def predict(self,X):
         """
         :param X:特征
         :return: 多任务上的值
         """
-        H=np.dot(X,self.W)
+
         sess=tf.Session()
         with sess.as_default():
-            H=tf.nn.relu(H).eval()
+            H = tf.matmul(tf.cast(X,tf.float32), self.W)
+            H=tf.nn.relu(H)
+            y2 = tf.matmul(H, tf.transpose(self.W2)) + self.b2
+            y1 = tf.matmul(H, tf.transpose(self.W1)) + self.b1
+            #TODO failed激活函数
 
-        y1 = np.dot(self.W1, np.transpose(H)) + self.b1
-        y2 = np.dot(self.W2, np.transpose(H)) + self.b2
+            # y1=y1*y2
+
+
+
+            y1=y1.eval()
+            y2=y2.eval()
+
+
+
+
+        #TODO 希望挂科人绩点也不高
+
+
         y1 = y1.flatten()
         y2 = y2.flatten()
         thres = 0.5
         y2[y2 >= thres] = 1
         y2[y2 < thres] = 0
         res = np.array([y1, y2])
-        # sess=tf.Session()
-        # saver=tf.train.import_meta_graph("models/my_model-1000.meta")
-        # saver.restore(sess,tf.train.latest_checkpoint('models/'))
-        # fake_y1=np.full(shape=(len(X),1),fill_value=1)
-        # fake_y2=np.full(shape=(len(X),1),fill_value=1)
-        # graph=tf.get_default_graph()
-        # X_fea=graph.get_operation_by_name("X").outputs[0]
-        # gpa=graph.get_operation_by_name("y_gpa").outputs[0]
-        # failed=graph.get_operation_by_name("y_failed").outputs[0]
-        # res_gpa=sess.run(gpa,feed_dict={X_fea:X,gpa:fake_y1,failed:fake_y2})
-        # res_failed=sess.run(failed,feed_dict={X_fea:X,gpa:fake_y1,failed:fake_y2})
-        # res_failed[res_failed>=0.5]=1
-        # res_failed[res_failed<0.5]=1
-        # print(res_gpa.shape)
-        # print(res_failed.shape)
-        # res=[res_gpa,res_failed]
 
         return res

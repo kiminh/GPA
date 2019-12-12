@@ -221,18 +221,18 @@ def SplitEntropy(entropy_df,train_lst,test_lst,train_path,test_path):
 
 
 if __name__ =="__main__":
-    root="C://zxl/Data/GPA/"
+    root="C://zxl/Data/GPA-large/"
     profile_path=root+"stu/profile.csv"
 
     grade_dir=root+"grade/records_completed/"
-    library_path=root+"entropy/library.csv"
+    library_path=root+"library/lib.csv"
     breakfast_path=root+"entropy/breakfast.csv"
     lunch_path=root+"entropy/lunch.csv"
     dinner_path=root+"entropy/dinner.csv"
 
 
-    train_stu_path=root+"grade/train/train_stu.csv"
-    test_stu_path=root+"grade/test/test_stu.csv"
+    train_stu_path=root+"train/train_stu.csv"
+    test_stu_path=root+"test/test_stu.csv"
     train_gpa_json_path=root+"train/gpa.json"
     test_gpa_json_path=root+"test/gpa.json"
 

@@ -84,6 +84,7 @@ def CalGpa(gpa_df):
         if gpa == -1:
             continue
         elif gpa ==0 :
+            total_credit+=credit
             failed=True
         else:
             total_credit+=credit
@@ -96,22 +97,29 @@ def CalGpa(gpa_df):
 
 
 if __name__ =="__main__":
-    root="C://zxl/Data/GPA/"
+    root="C://zxl/Data/GPA-large/"
     stu_file=root+"stu/stu_list.csv"
     save_root=root+"grade/"
     save_dir=save_root+"records/"
     # semesters=['20162','20171','2017s']
     stu_df= pd.read_csv(stu_file)
 
+    processed_dic={}
+    for file_name in os.listdir(save_dir):
+        processed_dic[file_name[:-4]]=True
+
+
     """
     从数据库里面找成绩记录，将每个人的成绩记录存到一个csv文件中
     """
     # for stu_id in stu_df.stu_id.values:
-    #         dic=getGrade(stu_id,None)
-    #         df=pd.DataFrame(dic)
-    #         save_path=save_dir+stu_id+".csv"
-    #         df.to_csv(save_path,index=False)
-    #         print(stu_id)
+    #     if stu_id in processed_dic.keys():#上次已经找过的记录，这次不再查找
+    #         continue
+    #     dic=getGrade(stu_id,None)
+    #     df=pd.DataFrame(dic)
+    #     save_path=save_dir+stu_id+".csv"
+    #     df.to_csv(save_path,index=False)
+    #     print(stu_id)
 
     """
     基于每个人的成绩记录，
@@ -122,10 +130,12 @@ if __name__ =="__main__":
     gpa_list=[]
     failed_list=[]
     total_credit_list=[]
-    for stu_id in stu_df.stu_id.values:
+    for stu_id in stu_df.stu_id.values[:10]:
         gpa_df=pd.read_csv(save_dir+stu_id+".csv")
         for ctime,df in gpa_df.groupby('ctime'):
             (total_credit,avg_gpa,failed)=CalGpa(df)
+            if total_credit==0:#如果这个学生这学期没有课，删除这条记录
+                continue
             stu_list.append(stu_id)
             ctime_list.append(ctime)
             gpa_list.append(avg_gpa)
@@ -140,4 +150,4 @@ if __name__ =="__main__":
     dic['failed']=failed_list
 
     df=pd.DataFrame(dic)
-    df.to_csv(save_root+"gpa.csv",index=False)
+    df.to_csv(root+"processed/gpa.csv",index=False)
