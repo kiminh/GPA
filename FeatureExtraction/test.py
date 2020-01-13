@@ -11,10 +11,11 @@ from datetime import datetime
 import matplotlib as mpl
 mpl.rcParams['font.sans-serif'] = ['FangSong']
 import matplotlib.pyplot as plt
+from sklearn.metrics import hamming_loss,precision_score,f1_score,accuracy_score,recall_score,coverage_error,label_ranking_loss,average_precision_score,roc_auc_score
 
 
-arr=np.full(shape=(3,5),fill_value=3)
-
-b=arr[:,0]+arr[:,1]+arr[:,2]
-print(arr)
-print(b)
+arr=np.array([0.1,0.5,0.3,0.8])
+idx=int(np.argmax(arr))
+p=[0,0,0,0]
+p[idx]=1
+print(p)

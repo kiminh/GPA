@@ -6,7 +6,8 @@
 from sklearn import linear_model
 from sklearn import svm,neighbors,ensemble,tree
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import hamming_loss,precision_score,f1_score,accuracy_score,recall_score,coverage_error,label_ranking_loss,average_precision_score,roc_auc_score
 from sklearn.neural_network import MLPRegressor,MLPClassifier
 
 # from Predict.DataHandler import *
@@ -58,12 +59,25 @@ train_failed_y=train_y[:,1].flatten()
 test_gpa_y=test_y[:,0].flatten()
 test_failed_y=test_y[:,1].flatten()
 
+#划分验证集和测试集
+
+validation_size=int(np.floor(len(test_failed_y)*0.5))
+validation_gpa_y=test_gpa_y[:validation_size]
+validation_failed_y=test_failed_y[:validation_size]
+validation_Y=[np.reshape(validation_gpa_y,newshape=(-1,1)),np.reshape(validation_failed_y,newshape=(-1,1))]
+validation_X=test_X[:validation_size]
+
+test_gpa_y=test_gpa_y[validation_size:]
+test_failed_y=test_failed_y[validation_size:]
+test_X=test_X[validation_size:]
+test_Y=[np.reshape(test_gpa_y,newshape=(-1,1)),np.reshape(test_failed_y,newshape=(-1,1))]
+
 #对train中failed的样本进行重复采样
-failed_idx=np.argwhere(train_failed_y==0).flatten()
-dup_idx=np.random.choice(failed_idx,len(failed_idx)*3,replace=True)#有放回抽取
-train_X=np.concatenate((train_X,train_X[dup_idx]),axis=0)
-train_failed_y=np.append(train_failed_y,train_failed_y[dup_idx])
-train_gpa_y=np.append(train_gpa_y,train_gpa_y[dup_idx])
+# failed_idx=np.argwhere(train_failed_y==0).flatten()
+# dup_idx=np.random.choice(failed_idx,len(failed_idx)*3,replace=True)#有放回抽取
+# train_X=np.concatenate((train_X,train_X[dup_idx]),axis=0)
+# train_failed_y=np.append(train_failed_y,train_failed_y[dup_idx])
+# train_gpa_y=np.append(train_gpa_y,train_gpa_y[dup_idx])
 
 print("Load finished!")
 print("训练集记录条数:%d"%len(train_X))
@@ -82,70 +96,156 @@ print("训练集中正负样本比例：%d:%d"%(len(np.argwhere(train_failed_y==
 """
 print("是否挂科 二分类任务")
 
+#只看挂科这一类分类效果好坏
+test_failed_y=[1-x for x in test_failed_y]
+
+
 model=MLPClassifier()
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("MLP-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------MLP---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 
 
 model=DecisionTreeClassifier()
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("决策树-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------DT---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=neighbors.KNeighborsClassifier()
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("KNN-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------KNN---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=ensemble.RandomForestClassifier(n_estimators=20,random_state=random_state)
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("随机森林-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------随机森林---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=ensemble.GradientBoostingClassifier(n_estimators=20,random_state=random_state)
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("GBRT-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------GBDT---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=ensemble.BaggingClassifier(random_state=random_state)
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("Bagging-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------Bagging---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=tree.ExtraTreeClassifier(random_state=random_state)
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("ExtraTree-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------ExtraTree---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=ensemble.AdaBoostClassifier(n_estimators=20,random_state=random_state)
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("Adaboost-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------Adaboost---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
 
 model=svm.SVC()
 predict_y=model.fit(train_X,train_failed_y).predict(test_X)
-f1=f1_score(test_failed_y,predict_y)
-macro_auc=roc_auc_score(test_failed_y,predict_y,average="macro")
-micro_auc=roc_auc_score(test_failed_y,predict_y,average="micro")
-print("SVM-- f1:%f, macro:%f, micro:%f"%(f1,macro_auc,micro_auc))
+#只看挂科这一类分类效果好 坏
+predict_failed_y=[1-x for x in predict_y]
+print("------SVC---------")
+f1=f1_score(test_failed_y,predict_failed_y)
+print("f1:%f"%f1)
+macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+print("macro auc:%f"%macro_auc)
+accuracy=accuracy_score(test_failed_y,predict_failed_y)
+print("accuracy:%f"%accuracy)
+precision=precision_score(test_failed_y,predict_failed_y)
+print("precision:%f"%precision)
+recall=recall_score(test_failed_y,predict_failed_y)
+print("recall:%f"%recall)
+
 """
 gpa
 """

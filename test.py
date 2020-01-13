@@ -4,10 +4,10 @@
 # @FileName: test.py
 
 import pandas as pd
+import numpy as np
 
-df1=pd.DataFrame({"a":[1,2,3],"c":[1,2,3],"d":[1,2,3]})
-df2=pd.DataFrame({"a":[1,2,3],"c":[1,2,3],"e":[1,2,3]})
-df3=df1[['a','d']]
-print(df1)
-print(df2)
-print(df3)
+
+arr=np.array([1,2,3,4])
+b=np.reshape(arr,newshape=(-1,1))
+print(arr)
+print(b)

@@ -7,8 +7,9 @@
 import matplotlib as mpl
 mpl.rcParams['font.sans-serif'] = ['FangSong']
 import matplotlib.pyplot as plt
-from sklearn.metrics import f1_score,mean_squared_error,roc_auc_score
-
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import hamming_loss,precision_score,f1_score,accuracy_score,recall_score,coverage_error,label_ranking_loss,average_precision_score,roc_auc_score
+from sklearn.metrics import precision_score,recall_score
 # from Predict.DataHandler import *
 from DataUtil.DataHandler import *
 from MTL.batchNN import nnMTL2
@@ -84,7 +85,7 @@ model=nnMTL2()
 model.fit(train_X,train_Y)
 predict_Y=model.predict(test_X)
 predict_gpa_y=predict_Y[0].flatten()
-predict_failed_y=predict_Y[1].flatten()
+predict_y=predict_Y[1].flatten()
 
 print(predict_gpa_y.shape)
 print(test_gpa_y.shape)
@@ -96,11 +97,27 @@ plt.plot(test_gpa_y,test_gpa_y,color="red")
 plt.show()
 print("-------failed分类预测-------")
 print(set(test_failed_y))
-print(set(predict_failed_y))
-f1=f1_score(test_failed_y,predict_failed_y)
-print("f1:%f"%f1)
-macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
-print("macro auc:%f"%macro_auc)
-micro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="micro")
-print("micro auc:%f"%micro_auc)
+# print(set(predict_y))
+
+#只看挂科这一类分类效果好坏
+test_failed_y=[1-x for x in test_failed_y]
+for item in predict_y:
+    print(item)
+for thres in [0.5]:
+    predict_y2=predict_y
+    predict_y2[predict_y2>=thres]=1
+    predict_y2[predict_y2<thres]=0
+    predict_failed_y=[1-x for x in predict_y2]
+    print("---------------thres:%f-----------"%thres)
+    f1=f1_score(test_failed_y,predict_failed_y)
+    print("f1:%f"%f1)
+    macro_auc=roc_auc_score(test_failed_y,predict_failed_y,average="macro")
+    print("macro auc:%f"%macro_auc)
+    accuracy=accuracy_score(test_failed_y,predict_failed_y)
+    print("accuracy:%f"%accuracy)
+    precision=precision_score(test_failed_y,predict_failed_y)
+    print("precision:%f"%precision)
+    recall=recall_score(test_failed_y,predict_failed_y)
+    print("recall:%f"%recall)
+
 

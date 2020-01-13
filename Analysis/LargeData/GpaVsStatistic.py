@@ -50,23 +50,23 @@ if __name__ =="__main__":
     consume_file2=processed_root+"consume2.csv"
     lib_file2=processed_root+"lib2.csv"
 
-    consume_df=pd.read_csv(consume_file)
+    consume_df=pd.read_csv(consume_file2)
     gpa_df=pd.read_csv(gpa_file)
-    lib_df=pd.read_csv(lib_file)
+    # lib_df=pd.read_csv(lib_file)
     # consume_df2=pd.read_csv(consume_file2)
-    # lib_df2=pd.read_csv(lib_file2)
+    lib_df2=pd.read_csv(lib_file2)
 
     df=pd.merge(consume_df,gpa_df,on='stu_id')
     # df=pd.merge(df,lib_df,on='stu_id')
     # df=pd.merge(df,consume_df2,on='stu_id')
-    df=pd.merge(df,lib_df,on='stu_id')
+    df=pd.merge(df,lib_df2,on='stu_id')
 
     for title in [
-                  'breakfast_num','lunch_num','dinner_num','num',
-                  # 'pre_breakfast_num','pre_lunch_num','pre_dinner_num',
-                  # 'dur_breakfast_num', 'dur_lunch_num', 'dur_dinner_num',
-                  # 'post_breakfast_num', 'post_lunch_num', 'post_dinner_num',
-                  # 'pre_num','dur_num','post_num'
+                  'breakfast_num','lunch_num','dinner_num','lib_num',
+                  'pre_breakfast_num','pre_lunch_num','pre_dinner_num',
+                  'dur_breakfast_num', 'dur_lunch_num', 'dur_dinner_num',
+                  'post_breakfast_num', 'post_lunch_num', 'post_dinner_num',
+                  'pre_lib_num','dur_lib_num','post_lib_num'
                   ]:
         count_lst=[]
         gpa_lst=[]

@@ -11,7 +11,7 @@ import numpy as np
 """
 
 class LinearMTL():
-    def __init__(self,epoch=5000):
+    def __init__(self,epoch=1):
         self.h = 50
         self.epoch = epoch
         self.learning_rate = 0.001

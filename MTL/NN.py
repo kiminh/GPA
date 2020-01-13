@@ -11,7 +11,7 @@ class nnMTL():
     神经网络多任务
     先共享隐层，再各自预测
     """
-    def __init__(self,h=50,iter=5000):
+    def __init__(self,h=50,iter=1):
         self.h=h
         self.iter=iter
 
@@ -59,7 +59,7 @@ class nnMTL():
         loss = 2*loss1 +  loss2+reg_loss
 
         # 构建优化器
-        optimizer=tf.train.AdamOptimizer(0.05)
+        optimizer=tf.train.AdamOptimizer(0.001)
         # optimizer = tf.train.GradientDescentOptimizer(0.001)
         train = optimizer.minimize(loss)
 

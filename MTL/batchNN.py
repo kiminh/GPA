@@ -20,7 +20,7 @@ class nnMTL2():
         self.epoch=epoch
         self.learning_rate=0.001
         self.lamda=0.001#正则项参数
-        self.batch_size=1300
+        self.batch_size=2000
         self.alpha=0.7#gpa的权重
 
     def fit(self,X,Y):
@@ -69,25 +69,27 @@ class nnMTL2():
 
         #TODO 输出层激活函数未写
         # y1=tf.nn.dropout(y1,keep_prob=1)
-        # y2=tf.nn.sigmoid(y2)
+        y2=tf.nn.sigmoid(y2)
 
         # 方差
         # 正则项
+
         reg_loss1=tf.reduce_mean((tf.nn.l2_loss(W)+tf.nn.l2_loss(W1)+tf.nn.l2_loss(W2)))
         reg_loss2=tf.reduce_mean(tf.nn.l2_loss(b1)+tf.nn.l2_loss(b2))
-
+        reg_loss=reg_loss1+reg_loss2
+        # reg_loss=tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss1 = tf.reduce_mean(tf.square(y1 - y_gpa) )
 
         #loss2试试sigmoid+mse
-        loss2=tf.reduce_mean(tf.square(tf.nn.sigmoid(y2)-y_failed))
-        # loss2 = tf.reduce_mean(
-        #     tf.nn.sigmoid_cross_entropy_with_logits(labels=y_failed, logits=y2))
+        # loss2=tf.reduce_mean(tf.square(tf.nn.sigmoid(y2)-y_failed))
+        loss2 = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(labels=y_failed, logits=y2))
 
         # #TODO约束的loss，更加关注未通过那部分
         # aux_loss=tf.reduce_mean(tf.square(y1*y_failed-y_gpa*y_failed))
         #
         # loss1=2*loss1-aux_loss
-        loss = self.alpha*(loss1) + (1.0-self.alpha)*loss2+ self.lamda*(reg_loss1+reg_loss2)
+        loss = self.alpha*(loss1) + (1.0-self.alpha)*loss2+ self.lamda*(reg_loss)
 
         # 构建优化器
         optimizer=tf.train.AdamOptimizer(self.learning_rate)
@@ -137,7 +139,7 @@ class nnMTL2():
             y1 = tf.matmul(H, tf.transpose(self.W1)) + self.b1
             #TODO failed激活函数
 
-            # y1=y1*y2
+            y2 = tf.nn.sigmoid(y2)
 
 
 
@@ -152,9 +154,11 @@ class nnMTL2():
 
         y1 = y1.flatten()
         y2 = y2.flatten()
-        thres = 0.5
-        y2[y2 >= thres] = 1
-        y2[y2 < thres] = 0
+        print(min(y2))
+        print(max(y2))
+        # thres = 0.4
+        # y2[y2 >= thres] = 1
+        # y2[y2 < thres] = 0
         res = np.array([y1, y2])
 
         return res
