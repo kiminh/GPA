@@ -3,6 +3,7 @@
 # @Author  : zxl
 # @FileName: batchNN.py
 
+import random
 import numpy as np
 import tensorflow as tf
 
@@ -38,6 +39,20 @@ class nnMTL2():
         self.y3=[1-x for x in self.y2.flatten()]#pass，挂科为1，通过为0
         self.train()
 
+    def myShuffle(self,X,y1,y2):
+        """
+        对数据进行shuffle
+        :param X:
+        :param y1:
+        :param y2:
+        :return:
+        """
+        idx=[i for i in range(len(X))]
+        random.shuffle(idx)
+        X=X[idx]
+        y1=y1[idx]
+        y2=y2[idx]
+        return (X,y1,y2)
 
     def train(self):
         d=len(self.X[0])
@@ -103,6 +118,7 @@ class nnMTL2():
             sess.run(tf.global_variables_initializer())
             sess.run(tf.local_variables_initializer())
             for e in np.arange(0,self.epoch):
+                (self.X, self.y1, self.y2) = self.myShuffle(self.X, self.y1, self.y2)
                 cur_loss=0.0
                 i=0
                 while i<record_num:

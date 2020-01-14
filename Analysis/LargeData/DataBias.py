@@ -21,3 +21,11 @@ if __name__ =="__main__":
         plt.hist(gpa_values)
         plt.title('failed: %d'%f)
         plt.show()
+    plt.hist(df['gpa'].values)
+    plt.title('whole')
+    plt.show()
+
+
+    pass_df=df[df['failed']==0]
+    fail_df=df[df['failed']==1]
+    print("通过人数：%d, 挂科人数：%d"%(pass_df.shape[0],fail_df.shape[0]))

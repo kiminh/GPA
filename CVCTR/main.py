@@ -12,6 +12,8 @@ from sklearn.metrics import precision_score,recall_score
 # from Predict.DataHandler import *
 from DataUtil.DataHandler import *
 from CVCTR.cvctr.CMTL import CMTL
+from CVCTR.cvctr.GBDTMLP import gbdtmlp
+from CVCTR.cvctr.CMTLR import CMTLR
 from ModelEvaluation.Evaluation import Evaluate
 """
 将gpa变成分类问题
@@ -89,7 +91,9 @@ print("测试集记录条数:%d"%len(test_X))
 # print("验证集记录条数:%d"%len(validation_X))
 print("训练集中正负样本比例：%d:%d"%(len(np.argwhere(train_failed_y[:,0]==1).flatten()),len(np.argwhere(train_failed_y[:,1]==1).flatten())))
 
-model=CMTL()
+# model=CMTL()
+# model=gbdtmlp()
+model=CMTLR()
 model.fit(train_X,train_Y)
 predict_Y=model.predict(test_X)
 
@@ -101,3 +105,5 @@ Evaluate(test_gpa_y,predict_gpa)
 
 print("failed 预测")
 Evaluate(test_failed_y,predict_failed)
+
+
